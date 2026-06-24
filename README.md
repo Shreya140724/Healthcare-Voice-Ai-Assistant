@@ -121,11 +121,15 @@ Healthcare-Voice-AI-Agent/
 │   │   ├── App.css
 │   │   └── main.jsx
 │   │
-│   └── package.json
 │
-├── public/
-│   └── Speaking-Avatar.mp4
+├── screenshots/
+│   ├── UI1.jpg
+│   ├── UI2.jpg
+│   ├── UI3.jpg
+│   ├── summary.jpg
+│   
 │
+└── package.json
 └── README.md
 ```
 
