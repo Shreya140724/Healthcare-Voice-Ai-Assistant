@@ -1,15 +1,18 @@
-# 🏥 Healthcare Voice AI Agent
+# 🏥 Healthcare Voice AI Assistant
 
-A voice-enabled healthcare appointment booking assistant built using FastAPI, React, Whisper Speech-to-Text, Ollama LLM, and Text-to-Speech technology.
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![Whisper](https://img.shields.io/badge/OpenAI-Whisper-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Edge-TTS](https://img.shields.io/badge/Edge--TTS-0078D4?style=for-the-badge&logo=microsoftedge&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge)
+![Generative AI](https://img.shields.io/badge/Generative-AI-8A2BE2?style=for-the-badge)
+![Voice AI](https://img.shields.io/badge/Voice-AI-00C853?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
+An AI-powered Healthcare Voice Assistant that enables users to interact using both voice and text to manage healthcare appointments.
 
-The system allows users to interact naturally using voice or text to:
-
-* View available appointment slots
-* Book appointments
-* Retrieve booked appointments
-* Cancel appointments
-* Modify appointments
-* Generate conversation summaries
+The assistant supports appointment booking, retrieval, cancellation, modification, speech-to-text transcription, AI-generated medical summaries, and realistic text-to-speech responses through an interactive avatar interface.
 
 ---
 
@@ -138,9 +141,9 @@ Healthcare-Voice-AI-Agent/
 ## Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/Healthcare-Voice-AI-Agent.git
+git clone https://github.com/Shreya140724/Healthcare-Voice-AI-Assistant.git
 
-cd Healthcare-Voice-AI-Agent
+cd Healthcare-Voice-AI-Assistant
 ```
 
 ## Backend Setup
@@ -237,6 +240,10 @@ Reschedule appointment 9876543210 from 2026-06-29 11 AM to 2026-06-29 2 PM
 
 ![Retrieve Appointments](screenshots/UI3.jpg)
 
+### Modify Booking
+
+![Appointment Booking](screenshots/UI4.jpg)
+
 ### Conversation Summary
 
 ![Conversation Summary](screenshots/summary.jpg)
@@ -271,13 +278,5 @@ Reschedule appointment 9876543210 from 2026-06-29 11 AM to 2026-06-29 2 PM
 **Shreya Sidabache**
 
 M.Tech in Artificial Intelligence
-
-Specialization:
-
-* Artificial Intelligence
-* Machine Learning
-* Computer Vision
-* Generative AI
-* Voice AI Systems
 
 ---
