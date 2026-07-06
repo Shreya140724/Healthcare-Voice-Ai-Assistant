@@ -10,6 +10,7 @@
 ![Generative AI](https://img.shields.io/badge/Generative-AI-8A2BE2?style=for-the-badge)
 ![Voice AI](https://img.shields.io/badge/Voice-AI-00C853?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
+
 An AI-powered Healthcare Voice Assistant that enables users to interact using both voice and text to manage healthcare appointments.
 
 The assistant supports appointment booking, retrieval, cancellation, modification, speech-to-text transcription, AI-generated medical summaries, and realistic text-to-speech responses through an interactive avatar interface.
