@@ -5,19 +5,36 @@ import {
   FaPaperPlane,
   FaFileAlt
 } from "react-icons/fa";
+
 import "./App.css";
+
 function App() {
+
+  // =====================================
+  // States
+  // =====================================
 
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [recording, setRecording] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState("");
+
+  // =====================================
+  // Refs
+  // =====================================
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const chatEndRef = useRef(null);
   const videoRef = useRef(null);
+  const audioRef = useRef(null);
+  const welcomePlayed = useRef(false);
+
+  // =====================================
+  // Auto Scroll
+  // =====================================
 
   useEffect(() => {
 
@@ -26,6 +43,10 @@ function App() {
     });
 
   }, [messages]);
+
+  // =====================================
+  // Send Message
+  // =====================================
 
   const sendMessage = async (
     text = message
@@ -44,6 +65,8 @@ function App() {
     ]);
 
     try {
+
+      setLoading(true);
 
       const response =
         await axios.post(
@@ -64,7 +87,7 @@ function App() {
         }
       ]);
 
-      playTTS(botText);
+      await playTTS(botText);
 
       setMessage("");
 
@@ -79,8 +102,18 @@ function App() {
           text: "Backend Error"
         }
       ]);
+
+    } finally {
+
+      setLoading(false);
+
     }
+
   };
+
+  // =====================================
+  // Start Recording
+  // =====================================
 
   const startRecording = async () => {
 
@@ -102,14 +135,14 @@ function App() {
       recorder.ondataavailable =
         (event) => {
 
-          if (
-            event.data.size > 0
-          ) {
+          if (event.data.size > 0) {
 
             audioChunksRef.current.push(
               event.data
             );
+
           }
+
         };
 
       recorder.onstop =
@@ -119,14 +152,12 @@ function App() {
             new Blob(
               audioChunksRef.current,
               {
-                type:
-                "audio/wav"
+                type: "audio/wav"
               }
             );
 
-          await transcribeAudio(
-            blob
-          );
+          await transcribeAudio(blob);
+
         };
 
       recorder.start();
@@ -136,17 +167,28 @@ function App() {
     } catch {
 
       alert(
-        "Microphone permission denied"
+        "Microphone permission denied."
       );
+
     }
+
   };
+
+  // =====================================
+  // Stop Recording
+  // =====================================
 
   const stopRecording = () => {
 
     mediaRecorderRef.current.stop();
 
     setRecording(false);
+
   };
+
+  // =====================================
+  // Speech To Text
+  // =====================================
 
   const transcribeAudio =
     async (audioBlob) => {
@@ -176,60 +218,115 @@ function App() {
       } catch (error) {
 
         console.error(error);
+
       }
+
     };
+      // =====================================
+  // Text To Speech
+  // =====================================
 
-const playTTS = async (text) => {
+  const playTTS = async (text) => {
 
-  try {
+    try {
 
-    const response =
-      await axios.post(
-        "http://127.0.0.1:8000/tts",
-        { text },
-        {
-          responseType: "blob"
-        }
-      );
+      // Stop previous audio if still playing
+      if (audioRef.current) {
 
-    const audioUrl =
-      URL.createObjectURL(response.data);
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
 
-    const audio =
-      new Audio(audioUrl);
+      }
 
-    // START AVATAR ONLY WHEN AUDIO IS READY
+      const response =
+        await axios.post(
+          "http://127.0.0.1:8000/tts",
+          { text },
+          {
+            responseType: "blob"
+          }
+        );
 
-    setSpeaking(true);
+      const audioUrl =
+        URL.createObjectURL(response.data);
 
-    if (videoRef.current) {
+      audioRef.current =
+        new Audio(audioUrl);
 
-      videoRef.current.currentTime = 0;
+      const audio =
+        audioRef.current;
 
-      videoRef.current.play();
-    }
-
-    audio.onended = () => {
-
-      setSpeaking(false);
+      // Avatar starts speaking
+      setSpeaking(true);
 
       if (videoRef.current) {
 
-        videoRef.current.pause();
-
         videoRef.current.currentTime = 0;
+        videoRef.current.play();
+
       }
-    };
 
-    await audio.play();
+      audio.onended = () => {
 
-  } catch (error) {
+        setSpeaking(false);
 
-    console.error(error);
+        if (videoRef.current) {
 
-    setSpeaking(false);
-  }
-};
+          videoRef.current.pause();
+          videoRef.current.currentTime = 0;
+
+        }
+
+        // Free memory
+        URL.revokeObjectURL(audioUrl);
+
+      };
+
+      await audio.play();
+
+    } catch (error) {
+
+      console.error(error);
+
+      setSpeaking(false);
+
+    }
+
+  };
+
+  // =====================================
+  // Welcome Message
+  // =====================================
+
+  useEffect(() => {
+
+    if (welcomePlayed.current) return;
+
+    welcomePlayed.current = true;
+
+    const welcomeMessage =
+        "Hello! Welcome to Healthcare Voice AI Assistant. " +
+        "You can ask me to show available slots, " +
+        "book an appointment, " +
+        "view your appointments, " +
+        "cancel an appointment, " +
+        "or modify an existing appointment. " +
+        "How may I assist you today?";
+
+    setMessages([
+        {
+            role: "assistant",
+            text: welcomeMessage
+        }
+    ]);
+
+    playTTS(welcomeMessage);
+
+}, []);
+
+  // =====================================
+  // Generate Summary
+  // =====================================
 
   const generateSummary =
     async () => {
@@ -239,10 +336,8 @@ const playTTS = async (text) => {
         const history =
           messages.map(
             msg => ({
-              role:
-                msg.role,
-              content:
-                msg.text
+              role: msg.role,
+              content: msg.text
             })
           );
 
@@ -250,10 +345,8 @@ const playTTS = async (text) => {
           await axios.post(
             "http://127.0.0.1:8000/summary",
             {
-              conversation_history:
-                history,
-              phone:
-                "9876543210"
+              conversation_history: history,
+              phone: "9876543210"
             }
           );
 
@@ -264,182 +357,185 @@ const playTTS = async (text) => {
       } catch (error) {
 
         console.error(error);
+
       }
+
     };
+  // =====================================
+  // UI
+  // =====================================
 
   return (
 
-  <div className="container">
+    <div className="container">
 
-    <h1>
-      Healthcare Voice AI Agent
-    </h1>
+      <h1>🏥 Healthcare Voice AI Assistant</h1>
 
-    <div className="dashboard">
+      <div className="dashboard">
 
-      {/* LEFT PANEL */}
+        {/* LEFT PANEL */}
 
-      <div className="left-panel">
+        <div className="left-panel">
 
-        <div className="avatar-card">
+          <div className="avatar-card">
 
-          <video
-            ref={videoRef}
-            className="avatar-video"
-            muted
-            loop
-            playsInline
-          >
-            <source
-              src="/Speaking-Avatar.mp4"
-              type="video/mp4"
-            />
-          </video>
+            <video
+              ref={videoRef}
+              className="avatar-video"
+              muted
+              loop
+              playsInline
+            >
+              <source
+                src="/Speaking-Avatar.mp4"
+                type="video/mp4"
+              />
+            </video>
 
-          <div className="status">
+            <div className="status">
 
-            {
-              recording
-                ? "🎤 Listening..."
-                : speaking
-                ? "🔊 Speaking..."
-                : "🟢 Ready"
-            }
+              {
+                recording
+                  ? "🎤 Listening..."
+                  : loading
+                  ? "🤖 Thinking..."
+                  : speaking
+                  ? "🔊 Speaking..."
+                  : "🟢 Ready"
+              }
+
+            </div>
 
           </div>
 
         </div>
 
-      </div>
+        {/* RIGHT PANEL */}
 
-      {/* RIGHT PANEL */}
+        <div className="right-panel">
 
-      <div className="right-panel">
+          {/* CHAT */}
 
-        <div className="chat-box">
+          <div className="chat-box">
 
-          {
-            messages.map(
-              (msg, index) => (
+            {
+              messages.map((msg, index) => (
 
                 <div
-  key={index}
-  className={
-    msg.role === "user"
-      ? "message-row user-row"
-      : "message-row bot-row"
-  }
->
+                  key={index}
+                  className={
+                    msg.role === "user"
+                      ? "message-row user-row"
+                      : "message-row bot-row"
+                  }
+                >
 
-  <div
-    className={
-      msg.role === "user"
-        ? "user-message"
-        : "bot-message"
-    }
-  >
-    {msg.text}
-  </div>
+                  <div
+                    className={
+                      msg.role === "user"
+                        ? "user-message"
+                        : "bot-message"
+                    }
+                  >
+                    {msg.text}
+                  </div>
 
-</div>
+                </div>
+
+              ))
+            }
+
+            <div ref={chatEndRef}></div>
+
+          </div>
+
+          {/* INPUT */}
+
+          <textarea
+            rows="3"
+            value={message}
+            placeholder="Type your message..."
+            onChange={(e) =>
+              setMessage(e.target.value)
+            }
+            disabled={loading}
+          />
+
+          {/* BUTTONS */}
+
+          <div className="buttons">
+
+            <button
+              onClick={() => sendMessage()}
+              disabled={loading}
+            >
+              <FaPaperPlane />
+              Send
+            </button>
+
+            {
+              !recording ? (
+
+                <button
+                  onClick={startRecording}
+                  disabled={loading || speaking}
+                >
+                  <FaMicrophone />
+                  Voice
+                </button>
+
+              ) : (
+
+                <button
+                  onClick={stopRecording}
+                >
+                  Stop
+                </button>
 
               )
-            )
-          }
-
-          <div ref={chatEndRef}></div>
-
-        </div>
-
-        {/* INPUT */}
-
-        <textarea
-          rows="3"
-          value={message}
-          placeholder="Type your message..."
-          onChange={(e) =>
-            setMessage(e.target.value)
-          }
-        />
-
-        {/* BUTTONS */}
-
-        <div className="buttons">
-
-          <button
-            onClick={() =>
-              sendMessage()
             }
-          >
-            <FaPaperPlane />
-            Send
-          </button>
+
+            <button
+              onClick={generateSummary}
+              disabled={loading || messages.length === 0}
+            >
+              <FaFileAlt />
+              Generate Medical Summary
+            </button>
+
+          </div>
+
+          {/* SUMMARY */}
 
           {
-            !recording ? (
+            summary && (
 
-              <button
-                onClick={
-                  startRecording
-                }
+              <details
+                className="summary-card"
+                open
               >
-                <FaMicrophone />
-                Voice
-              </button>
 
-            ) : (
+                <summary>
+                  Conversation Summary
+                </summary>
 
-              <button
-                onClick={
-                  stopRecording
-                }
-              >
-                Stop
-              </button>
+                <pre>
+                  {summary}
+                </pre>
+
+              </details>
 
             )
           }
 
-          <button
-            onClick={
-              generateSummary
-            }
-          >
-            <FaFileAlt />
-            Summary
-          </button>
-
         </div>
-
-        {/* SUMMARY */}
-
-        {
-          summary && (
-
-            <details
-              className="summary-card"
-            >
-
-              <summary>
-                Conversation Summary
-              </summary>
-
-              <pre>
-                {summary}
-              </pre>
-
-            </details>
-
-          )
-        }
 
       </div>
 
     </div>
 
-  </div>
+  );
 
-);
 }
 
 export default App;
